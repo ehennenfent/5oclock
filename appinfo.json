@@ -1,0 +1,31 @@
+{
+    "appKeys": {},
+    "capabilities": [
+        "location"
+    ],
+    "companyName": "ecapstone@gmail.com",
+    "longName": "It's 5 O'Clock Somewhere",
+    "projectType": "native",
+    "resources": {
+        "media": [
+            {
+                "file": "images/samoa.png",
+                "name": "SAMOA_BMP",
+                "type": "png"
+            }
+        ]
+    },
+    "sdkVersion": "3",
+    "shortName": "5 O'Clock",
+    "targetPlatforms": [
+        "aplite",
+        "basalt",
+        "chalk"
+    ],
+    "uuid": "45dd7566-dce9-4dc2-a1fa-66eb013d85de",
+    "versionLabel": "1.0",
+    "watchapp": {
+        "hiddenApp": true,
+        "watchface": true
+    }
+}
