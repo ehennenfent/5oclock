@@ -7,7 +7,8 @@ static TextLayer *s_shift_layer;
 static BitmapLayer *s_background_layer;
 static GBitmap *s_background_bitmap;
 const char *zones[24] = {"American Samoa", "Honolulu", "Ketchikan", "Las Vegas", "Denver", "Chicago", "Miami", "Puerto Rico", "Rio de Janiero", "Fernando de Noronha", "Cape Verde", "London", "Paris", "Cairo", "Moscos", "Dubai", "Pakistan", "Bangledash", "Bangkok", "Manila", "Tokyo", "Sydney", "Solomon Islands", "New Zealend"};
-// const char *shifts[24] = {"-11","-10","-9","-8","-7","-6","-5","-4","-3","-2","-1","+0","+1","+2","3","+4","+5","+6","+7","+8","+9","+10","+11","+12"};
+const char *shifts[24] = {"-11","-10","-9","-8","-7","-6","-5","-4","-3","-2","-1","+0","+1","+2","3","+4","+5","+6","+7","+8","+9","+10","+11","+12"};
+const int IDs[24] = {RESOURCE_ID_SAMOA, RESOURCE_ID_HONOLULU, RESOURCE_ID_KETCHIKAN, RESOURCE_ID_VEGAS, RESOURCE_ID_DENVER, RESOURCE_ID_CHICAGO, RESOURCE_ID_MIAMI, RESOURCE_ID_PUERTO, RESOURCE_ID_RIO, RESOURCE_ID_NORONHA, RESOURCE_ID_VERDE, RESOURCE_ID_LONDON, RESOURCE_ID_PARIS, RESOURCE_ID_CAIRO, RESOURCE_ID_MOSCOW, RESOURCE_ID_DUBAI, RESOURCE_ID_PAKISTAN, RESOURCE_ID_BANGLADESH, RESOURCE_ID_MANILA, RESOURCE_ID_TOKYO, RESOURCE_ID_SYDNEY, RESOURCE_ID_SOLOMON, RESOURCE_ID_ZEALAND};
 
 static int calculate_zone(int hour){
   int shift = 11 + (17 - hour);
@@ -27,7 +28,7 @@ static void update_time() {
 
   // Write the current hours and minutes into a buffer
   static char s_buffer[8];
-  strftime(s_buffer, sizeof(s_buffer), clock_is_24h_style() ? "%I:%M" : "%H:%M", tick_time);
+  strftime(s_buffer, sizeof(s_buffer), clock_is_24h_style() ? "17:%M" : "5:%M", tick_time);
   
   int london_hour = tick_time->tm_hour;
   int zone = calculate_zone(london_hour);
@@ -36,7 +37,9 @@ static void update_time() {
   // Display this time on the TextLayer
   text_layer_set_text(s_time_layer, s_buffer);
   text_layer_set_text(s_name_layer, zones[zone]);
-//   text_layer_set_text(s_shift_layer, shifts[zone]);
+  char *s  = "AAAAAAAA";
+  snprintf(s, 8, "UTC%s", shifts[zone]);
+  text_layer_set_text(s_shift_layer, s);
 }
 
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
@@ -71,18 +74,18 @@ static void main_window_load(Window *window) {
   text_layer_set_text_alignment(s_name_layer, GTextAlignmentCenter);
   
   // Set up Shift Layer
-//   s_name_layer = text_layer_create(
-//       GRect(0, PBL_IF_ROUND_ELSE(58, 138), bounds.size.w, 50));
+  s_shift_layer = text_layer_create(
+      GRect(0, PBL_IF_ROUND_ELSE(58, 145), bounds.size.w, 50));
 
   // Improve the layout to be more like a watchface
-//   text_layer_set_background_color(s_shift_layer, GColorClear);
-//   text_layer_set_text_color(s_shift_layer, GColorWhite);
-//   text_layer_set_text(s_shift_layer, "UTC+0");
-//   text_layer_set_font(s_shift_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
-//   text_layer_set_text_alignment(s_shift_layer, GTextAlignmentCenter);
+  text_layer_set_background_color(s_shift_layer, GColorClear);
+  text_layer_set_text_color(s_shift_layer, GColorWhite);
+  text_layer_set_text(s_shift_layer, "UTC+0");
+  text_layer_set_font(s_shift_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
+  text_layer_set_text_alignment(s_shift_layer, GTextAlignmentCenter);
   
     // Create GBitmap
-  s_background_bitmap = gbitmap_create_with_resource(RESOURCE_ID_SAMOA_BMP);
+  s_background_bitmap = gbitmap_create_with_resource(IDs[0]);
 
   // Create BitmapLayer to display the GBitmap
   s_background_layer = bitmap_layer_create(bounds);
@@ -94,7 +97,7 @@ static void main_window_load(Window *window) {
   // Add it as a child layer to the Window's root layer
   layer_add_child(window_layer, text_layer_get_layer(s_time_layer));
   layer_add_child(window_layer, text_layer_get_layer(s_name_layer));
-//   layer_add_child(window_layer, text_layer_get_layer(s_shift_layer));
+  layer_add_child(window_layer, text_layer_get_layer(s_shift_layer));
 }
 
 static void main_window_unload(Window *window) {
