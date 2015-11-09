@@ -9,6 +9,15 @@
     "resources": {
         "media": [
             {
+                "file": "images/bangkok.png",
+                "name": "BANGKOK",
+                "targetPlatforms": [
+                    "basalt",
+                    "chalk"
+                ],
+                "type": "png"
+            },
+            {
                 "file": "images/manila.png",
                 "name": "MANILA",
                 "targetPlatforms": [

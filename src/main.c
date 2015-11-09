@@ -6,9 +6,10 @@ static TextLayer *s_name_layer;
 static TextLayer *s_shift_layer;
 static BitmapLayer *s_background_layer;
 static GBitmap *s_background_bitmap;
-const char *zones[24] = {"American Samoa", "Honolulu", "Ketchikan", "Las Vegas", "Denver", "Chicago", "Miami", "Puerto Rico", "Rio de Janiero", "Fernando de Noronha", "Cape Verde", "London", "Paris", "Cairo", "Moscos", "Dubai", "Pakistan", "Bangledash", "Bangkok", "Manila", "Tokyo", "Sydney", "Solomon Islands", "New Zealend"};
-const char *shifts[24] = {"-11","-10","-9","-8","-7","-6","-5","-4","-3","-2","-1","+0","+1","+2","3","+4","+5","+6","+7","+8","+9","+10","+11","+12"};
-const int IDs[24] = {RESOURCE_ID_SAMOA, RESOURCE_ID_HONOLULU, RESOURCE_ID_KETCHIKAN, RESOURCE_ID_VEGAS, RESOURCE_ID_DENVER, RESOURCE_ID_CHICAGO, RESOURCE_ID_MIAMI, RESOURCE_ID_PUERTO, RESOURCE_ID_RIO, RESOURCE_ID_NORONHA, RESOURCE_ID_VERDE, RESOURCE_ID_LONDON, RESOURCE_ID_PARIS, RESOURCE_ID_CAIRO, RESOURCE_ID_MOSCOW, RESOURCE_ID_DUBAI, RESOURCE_ID_PAKISTAN, RESOURCE_ID_BANGLADESH, RESOURCE_ID_MANILA, RESOURCE_ID_TOKYO, RESOURCE_ID_SYDNEY, RESOURCE_ID_SOLOMON, RESOURCE_ID_ZEALAND};
+const char *zones[24] = {"American Samoa", "Honolulu", "Ketchikan", "Las Vegas", "Denver", "Chicago", "Miami", "Puerto Rico", "Rio de Janiero", "Fernando de Noronha", "Cape Verde", "London", "Paris", "Cairo", "Moscow", "Dubai", "Pakistan", "Bangledash", "Bangkok", "Manila", "Tokyo", "Sydney", "Solomon Islands", "New Zealend"};
+const char *shifts[24] = {"-11","-10","-9","-8","-7","-6","-5","-4","-3","-2","-1","+0","+1","+2","+3","+4","+5","+6","+7","+8","+9","+10","+11","+12"};
+const int IDs[24] = {RESOURCE_ID_SAMOA, RESOURCE_ID_HONOLULU, RESOURCE_ID_KETCHIKAN, RESOURCE_ID_VEGAS, RESOURCE_ID_DENVER, RESOURCE_ID_CHICAGO, RESOURCE_ID_MIAMI, RESOURCE_ID_PUERTO, RESOURCE_ID_RIO, RESOURCE_ID_NORONHA, RESOURCE_ID_VERDE, RESOURCE_ID_LONDON, RESOURCE_ID_PARIS, RESOURCE_ID_CAIRO, RESOURCE_ID_MOSCOW, RESOURCE_ID_DUBAI, RESOURCE_ID_PAKISTAN, RESOURCE_ID_BANGLADESH, RESOURCE_ID_BANGKOK, RESOURCE_ID_MANILA, RESOURCE_ID_TOKYO, RESOURCE_ID_SYDNEY, RESOURCE_ID_SOLOMON, RESOURCE_ID_ZEALAND};
+static int currentZone = 0;
 
 static int calculate_zone(int hour){
   int shift = 11 + (17 - hour);
@@ -19,6 +20,34 @@ static int calculate_zone(int hour){
     shift = shift - 24;
   }
   return shift;
+}
+
+static void update_bitmap(int id) {
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Updated Bitmap");
+  
+    // figure out which resource to use
+    if (s_background_bitmap != NULL) {
+      gbitmap_destroy(s_background_bitmap);
+      layer_remove_from_parent(bitmap_layer_get_layer(s_background_layer));
+      bitmap_layer_destroy(s_background_layer);
+    }
+    Layer *window_layer = window_get_root_layer(s_main_window);
+
+    s_background_bitmap = gbitmap_create_with_resource(id);
+    s_background_layer = bitmap_layer_create(layer_get_bounds(window_layer));
+    bitmap_layer_set_bitmap(s_background_layer, s_background_bitmap);
+    layer_add_child(window_layer, bitmap_layer_get_layer(s_background_layer));
+  
+    layer_remove_from_parent(text_layer_get_layer(s_time_layer));
+    layer_remove_from_parent(text_layer_get_layer(s_name_layer));
+    layer_remove_from_parent(text_layer_get_layer(s_shift_layer));
+    layer_add_child(window_layer, text_layer_get_layer(s_time_layer));
+    layer_add_child(window_layer, text_layer_get_layer(s_name_layer));
+    layer_add_child(window_layer, text_layer_get_layer(s_shift_layer));
+  
+//   bitmap_layer_set_bitmap(s_background_layer, s_background_bitmap);
+//   graphics_draw_bitmap_in_rect(ctx, s_background_bitmap, GRect rect);
+//   s_background_bitmap = gbitmap_create_with_resource(IDs[0]);
 }
 
 static void update_time() {
@@ -32,14 +61,20 @@ static void update_time() {
   
   int london_hour = tick_time->tm_hour;
   int zone = calculate_zone(london_hour);
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Time in London: %d", london_hour);
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Time zone: %d", zone);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Zone: %d", zone);
   // Display this time on the TextLayer
   text_layer_set_text(s_time_layer, s_buffer);
   text_layer_set_text(s_name_layer, zones[zone]);
   char *s  = "AAAAAAAA";
   snprintf(s, 8, "UTC%s", shifts[zone]);
   text_layer_set_text(s_shift_layer, s);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "ID: %d", IDs[zone]);
+  if(currentZone != zone){
+    update_bitmap(IDs[zone]);
+  }
+  currentZone = zone;
+//   layer_mark_dirty(bitmap_layer_get_layer(s_background_layer));
+  
 }
 
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
@@ -59,7 +94,7 @@ static void main_window_load(Window *window) {
   text_layer_set_background_color(s_time_layer, GColorClear);
   text_layer_set_text_color(s_time_layer, GColorBlack);
   text_layer_set_text(s_time_layer, "5:00");
-  text_layer_set_font(s_time_layer, fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD));
+  text_layer_set_font(s_time_layer, fonts_get_system_font(FONT_KEY_ROBOTO_BOLD_SUBSET_49));
   text_layer_set_text_alignment(s_time_layer, GTextAlignmentCenter);
   
   // Set up Name Layer
@@ -91,6 +126,7 @@ static void main_window_load(Window *window) {
   s_background_layer = bitmap_layer_create(bounds);
 
   // Set the bitmap onto the layer and add to the window
+//   layer_set_update_proc(bitmap_layer_get_layer(s_background_layer), update_bitmap);
   bitmap_layer_set_bitmap(s_background_layer, s_background_bitmap);
   layer_add_child(window_layer, bitmap_layer_get_layer(s_background_layer));
 
